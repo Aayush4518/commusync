@@ -7,20 +7,26 @@ import { Task, TaskDraft, TaskFilter } from "@/types/task";
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<TaskFilter>("all");
-  const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    queueMicrotask(() => {
-      setTasks(taskService.getTasks());
-      setIsReady(true);
-    });
+    const loadTasks = async () => {
+      try {
+        setIsLoading(true);
+        const loadedTasks = await taskService.getTasks();
+        setTasks(loadedTasks);
+        setError(null);
+      } catch (err) {
+        console.error("Failed to load tasks", err);
+        setError("Unable to load tasks right now.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadTasks();
   }, []);
-
-  useEffect(() => {
-    if (isReady) {
-      taskService.saveTasks(tasks);
-    }
-  }, [isReady, tasks]);
 
   const filteredTasks = useMemo(() => {
     if (filter === "all") {
@@ -40,53 +46,79 @@ export function useTasks() {
     };
   }, [tasks]);
 
-  const addTask = (draft: TaskDraft) => {
-    const task: Task = {
-      id: crypto.randomUUID(),
-      title: draft.title.trim(),
-      description: draft.description.trim(),
-      status: "active",
-      createdAt: new Date().toISOString(),
-    };
-
-    setTasks((currentTasks) => [task, ...currentTasks]);
+  const addTask = async (draft: TaskDraft) => {
+    try {
+      const createdTask = await taskService.createTask(draft);
+      setTasks((currentTasks) => [createdTask, ...currentTasks]);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to add task", err);
+      setError("Unable to add task right now.");
+    }
   };
 
-  const updateTask = (id: string, draft: TaskDraft) => {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === id
-          ? {
-              ...task,
-              title: draft.title.trim(),
-              description: draft.description.trim(),
-            }
-          : task,
-      ),
-    );
+  const updateTask = async (id: string, draft: TaskDraft) => {
+    try {
+      const updatedTask = await taskService.updateTask(id, draft);
+      setTasks((currentTasks) =>
+        currentTasks.map((task) => (task.id === id ? updatedTask : task)),
+      );
+      setError(null);
+    } catch (err) {
+      console.error("Failed to update task", err);
+      setError("Unable to update task right now.");
+    }
   };
 
-  const toggleTask = (id: string) => {
-    setTasks((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === id
-          ? {
-              ...task,
-              status: task.status === "completed" ? "active" : "completed",
-            }
-          : task,
-      ),
-    );
+  const toggleTask = async (id: string) => {
+    const targetTask = tasks.find((task) => task.id === id);
+
+    if (!targetTask) {
+      return;
+    }
+
+    try {
+      const updatedTask = await taskService.toggleTask(id, targetTask.status);
+      setTasks((currentTasks) =>
+        currentTasks.map((task) => (task.id === id ? updatedTask : task)),
+      );
+      setError(null);
+    } catch (err) {
+      console.error("Failed to toggle task", err);
+      setError("Unable to update task right now.");
+    }
   };
 
-  const deleteTask = (id: string) => {
-    setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
+  const deleteTask = async (id: string) => {
+    try {
+      await taskService.deleteTask(id);
+      setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
+      setError(null);
+    } catch (err) {
+      console.error("Failed to delete task", err);
+      setError("Unable to delete task right now.");
+    }
   };
 
-  const clearCompleted = () => {
-    setTasks((currentTasks) =>
-      currentTasks.filter((task) => task.status !== "completed"),
-    );
+  const clearCompleted = async () => {
+    const completedTaskIds = tasks
+      .filter((task) => task.status === "completed")
+      .map((task) => task.id);
+
+    if (completedTaskIds.length === 0) {
+      return;
+    }
+
+    try {
+      await Promise.all(completedTaskIds.map((id) => taskService.deleteTask(id)));
+      setTasks((currentTasks) =>
+        currentTasks.filter((task) => task.status !== "completed"),
+      );
+      setError(null);
+    } catch (err) {
+      console.error("Failed to clear completed tasks", err);
+      setError("Unable to clear completed tasks right now.");
+    }
   };
 
   return {
@@ -99,5 +131,7 @@ export function useTasks() {
     toggleTask,
     clearCompleted,
     setFilter,
+    isLoading,
+    error,
   };
 }

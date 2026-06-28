@@ -2,6 +2,7 @@
 
 import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
+import Loader from "@/components/Loader";
 import { FILTER_OPTIONS } from "@/utils/constants";
 import { useTasks } from "@/hooks/useTasks";
 
@@ -20,6 +21,8 @@ function TaskManager() {
     toggleTask,
     clearCompleted,
     setFilter,
+    isLoading,
+    error,
   } = useTasks();
 
   return (
@@ -51,6 +54,12 @@ function TaskManager() {
             </div>
           </div>
         </header>
+
+        {error ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            {error}
+          </div>
+        ) : null}
 
         <section className="grid gap-6 lg:grid-cols-[360px_1fr]">
           <TaskForm onAddTask={addTask} />
@@ -84,12 +93,16 @@ function TaskManager() {
               </button>
             </div>
 
-            <TaskList
-              tasks={filteredTasks}
-              onDeleteTask={deleteTask}
-              onToggleTask={toggleTask}
-              onUpdateTask={updateTask}
-            />
+            {isLoading ? (
+              <Loader />
+            ) : (
+              <TaskList
+                tasks={filteredTasks}
+                onDeleteTask={deleteTask}
+                onToggleTask={toggleTask}
+                onUpdateTask={updateTask}
+              />
+            )}
           </div>
         </section>
       </div>
