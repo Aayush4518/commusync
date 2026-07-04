@@ -21,7 +21,7 @@ const toTaskResponse = (task: any) => ({
   updatedAt: task.updatedAt,
 });
 
-export const createTask = async (input: CreateTaskInput) => {
+export const createTask = async (input: CreateTaskInput) => { //for DB
   const task = await TaskModel.create({
     title: input.title,
     description: input.description ?? "",

@@ -25,8 +25,8 @@ export default function TaskItem({
     day: "numeric",
   }).format(new Date(task.createdAt));
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {       //form event is used to handle the form submission
+    event.preventDefault();           //prevents loading the page when the form is submitted
 
     if (!title.trim()) {
       return;
@@ -41,6 +41,8 @@ export default function TaskItem({
     setDescription(task.description);
     setIsEditing(false);
   };
+
+  //editing block
 
   if (isEditing) {
     return (
@@ -78,6 +80,8 @@ export default function TaskItem({
       </form>
     );
   }
+
+    //display block
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">

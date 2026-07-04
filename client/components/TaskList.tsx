@@ -9,14 +9,14 @@ interface TaskListProps {
   onUpdateTask: (id: string, task: TaskDraft) => void;
 }
 
-export default function TaskList({
+export default function TaskList({    //this component is used to display the list of tasks
   tasks,
   onDeleteTask,
   onToggleTask,
   onUpdateTask,
 }: TaskListProps) {
   if (tasks.length === 0) {
-    return <EmptyState />;
+    return <EmptyState />;    //empty state gives a message when there are no tasks to display
   }
 
   return (

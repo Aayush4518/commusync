@@ -1,5 +1,5 @@
 import express from "express"
-import cors from "cors"
+import cors from "cors" 
 import taskRoutes from "./routes/task.routes"
 
 const app= express()

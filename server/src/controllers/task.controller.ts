@@ -8,30 +8,34 @@ interface TaskPayload {
   status?: string;
 }
 
-export const createTask = async (req: Request, res: Response): Promise<void> => {
+
+//create task
+export const createTask = async (req: Request, res: Response): Promise<void> => { //for HTTP request 
   try {
     const { title, description = "" } = req.body as TaskPayload;
-    const error = validateTask(title ?? "");
+    const error = validateTask(title ?? ""); // validate the task title and get any validation error 
 
     if (error) {
       res.status(400).json({ error });
       return;
     }
 
-    const taskTitle = title ?? "";
+    const taskTitle = title ?? ""; // using an empty string if title is undefined
     const task = await taskService.createTask({
       title: taskTitle.trim(),
       description: typeof description === "string" ? description.trim() : "",
-      status: "active",
+      status: "active",  
     });
 
-    res.status(201).json(task);
+    res.status(201).json(task); //send the created task as a response with status code 201 (Created)
   } catch (err) {
     res.status(500).json({ error: "failed to create task" });
   }
 };
 
-export const getTasks = async (_: Request, res: Response): Promise<void> => {
+
+//get task
+export const getTasks = async (_: Request, res: Response): Promise<void> => { 
   try {
     const tasks = await taskService.getAllTask();
     res.json(tasks);
@@ -40,9 +44,11 @@ export const getTasks = async (_: Request, res: Response): Promise<void> => {
   }
 };
 
+
+//update task
 export const updateTask = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // xxtract the task ID from the request parameters
 
     if (typeof id !== "string") {
       res.status(400).json({ error: "Invalid task id" });
@@ -62,6 +68,8 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
+
+//delete task
 export const deleteTask = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;

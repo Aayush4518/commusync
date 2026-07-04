@@ -32,8 +32,8 @@ const taskSchema = new Schema<ITask>(
   },
 );
 
-taskSchema.set("toJSON", {
-  transform: (_doc, ret) => {
+taskSchema.set("toJSON", {    //toJson method is used to convert the mongoose document to a JSON object
+  transform: (_doc, ret) => {   //parameters: _doc is the mongoose document, ret is the JSON object
     const task = ret as unknown as {
       _id?: { toString: () => string };
       __v?: number;
