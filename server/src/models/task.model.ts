@@ -1,34 +1,50 @@
-import mongoose, {Document,Schema} from "mongoose"
+import mongoose, { Document, Schema } from "mongoose";
 
-export interface ITask extends Document{ //interface for the task model
-    title: string;
-    description: string;
-    status: string;
-    createdAt: Date;
-    updatedAt: Date;
+export interface ITask extends Document {
+  title: string;
+  description: string;
+  status: "active" | "completed";
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const taskSchema = new Schema<ITask>(
   {
-    title:{
+    title: {
       type: String,
       required: true,
-      trim:true,
-      maxlength:100,
+      trim: true,
+      maxlength: 100,
     },
-    description:{
+    description: {
       type: String,
-      trim:true,
+      trim: true,
       default: "",
-    }
-    
+    },
+    status: {
+      type: String,
+      enum: ["active", "completed"],
+      default: "active",
+    },
   },
   {
     timestamps: true,
-  }
-)
+  },
+);
 
-export default mongoose.model<ITask>("Task", taskSchema)
+taskSchema.set("toJSON", {
+  transform: (_doc, ret) => {
+    const task = ret as unknown as {
+      _id?: { toString: () => string };
+      __v?: number;
+      id?: string;
+    };
 
-//"task" is the name of the collection in the database. Mongoose will automatically create a collection named "tasks" in the database.
-//taskSchema is the schema for the task model. It defines the structure of the task documents in the database.
+    task.id = task._id?.toString() ?? "";
+    delete task._id;
+    delete task.__v;
+    return task;
+  },
+});
+
+export default mongoose.model<ITask>("Task", taskSchema);
